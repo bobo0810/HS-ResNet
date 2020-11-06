@@ -2,7 +2,7 @@
 #### 收录到[PytorchNetHub](https://github.com/bobo0810/PytorchNetHub)
 
 ## 说明
-- 非官方(官方PaddlePaddle版暂未开源)
+- 非官方(官方Paddle版暂未开源)
 - 建议HSBottleNeck(显存过大)、BottleNeck搭配使用
 
 ## 环境
