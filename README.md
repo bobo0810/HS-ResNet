@@ -3,7 +3,6 @@
 
 ## 说明
 - 非官方(官方Paddle版暂未开源)
-- 建议HSBottleNeck(显存过大)、BottleNeck搭配使用
 
 ## 环境
 
@@ -15,7 +14,7 @@
 
 ```python
 import hs_resnet50,hs_resnet101,hs_resnet152
-pred=model(imgs)
+pred=hs_resnet50(imgs)
 ```
 
 ## 算法框架

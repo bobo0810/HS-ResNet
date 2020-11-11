@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from net.hs_resnet.hs_block import HSBlock
 
-
 class BottleNeck(nn.Module):
     """Residual block for resnet over 50 layers
 
@@ -40,16 +39,15 @@ class HSBottleNeck(nn.Module):
     """
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, s=8, w=18):
+    def __init__(self, in_channels, out_channels, stride=1, s=8):
         super().__init__()
         self.conv_1x1 = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
-
         #################################################################
-        # 特征图改变大小，用原生Conv
+        # 特征图尺度改变，用原生ResBlock
         if stride != 1:
             self.conv_3x3 = nn.Sequential(
                 nn.Conv2d(out_channels, out_channels, stride=stride, kernel_size=3, padding=1, bias=False),
@@ -57,20 +55,16 @@ class HSBottleNeck(nn.Module):
                 nn.ReLU(inplace=True),
             )
             out_ch = out_channels
-        # 特征图不变，用HSBlock
+        # 特征图尺度不变，用HSBlock
         else:
-            self.conv_3x3 = HSBlock(in_ch=out_channels, s=s, w=w)
-            in_ch = out_channels // s if out_channels % s == 0 else out_channels // s + 1  # 避免无法整除通道数
-            out_ch = in_ch + (w // 2) * (s - 2) + w
+            self.conv_3x3 = HSBlock(in_ch=out_channels, s=s)
         #################################################################
-
         self.conv_1x1_2 = nn.Sequential(
-            nn.Conv2d(out_ch, out_channels * HSBottleNeck.expansion, kernel_size=1, bias=False),
+            nn.Conv2d(out_channels, out_channels * HSBottleNeck.expansion, kernel_size=1, bias=False),
             nn.BatchNorm2d(out_channels * HSBottleNeck.expansion),
         )
 
         self.shortcut = nn.Sequential()
-
         if stride != 1 or in_channels != out_channels * HSBottleNeck.expansion:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels * HSBottleNeck.expansion, stride=stride, kernel_size=1, bias=False),
@@ -135,35 +129,37 @@ class HS_ResNet(nn.Module):
         output = self.avg_pool(output)
         output = output.view(output.size(0), -1)
         output = self.fc(output)
-
         return output
 
 
 def hs_resnet50():
     """ return a ResNet 50 object
     """
+    # return HS_ResNet(BottleNeck, [3, 4, 6, 3])
     return HS_ResNet(HSBottleNeck, [3, 4, 6, 3])
 
 
 def hs_resnet101():
     """ return a ResNet 101 object
     """
+    # return HS_ResNet(BottleNeck, [3, 4, 23, 3])
     return HS_ResNet(HSBottleNeck, [3, 4, 23, 3])
 
 
 def hs_resnet152():
     """ return a ResNet 152 object
     """
+    # return HS_ResNet(BottleNeck, [3, 8, 36, 3])
     return HS_ResNet(HSBottleNeck, [3, 8, 36, 3])
 
 
 if __name__ == '__main__':
     import os
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "1"
     device = torch.device("cuda:0")
     # [batch,channel,H,W]
-    feature = torch.rand(8, 3, 112, 96).to(device)
+    feature = torch.rand(4, 3, 112, 96).to(device)
     model = hs_resnet50().to(device).train()
     result = model(feature)
     print(result.size())

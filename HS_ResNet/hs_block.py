@@ -4,7 +4,7 @@ import torch.nn as nn
 
 
 class HSBlock(nn.Module):
-    def __init__(self, in_ch, s=8, w=18):
+    def __init__(self, in_ch, s=8):
         '''
         特征大小不改变
         :param in_ch: 输入通道
@@ -16,15 +16,18 @@ class HSBlock(nn.Module):
         self.module_list = nn.ModuleList()
         # 避免无法整除通道数
         in_ch, in_ch_last = (in_ch // s, in_ch // s) if in_ch % s == 0 else (in_ch // s + 1, in_ch % s)
-        for i in range(self.s):
-            if i == 0:
-                self.module_list.append(nn.Sequential())
-            elif i == 1:
-                self.module_list.append(self.conv_bn_relu(in_ch=in_ch, out_ch=w))
+        self.module_list.append(nn.Sequential())
+        acc_channels = 0
+        for i in range(1,self.s):
+            if i == 1:
+                channels=in_ch
+                acc_channels=channels//2
             elif i == s - 1:
-                self.module_list.append(self.conv_bn_relu(in_ch=in_ch_last + w // 2, out_ch=w))
+                channels = in_ch_last + acc_channels
             else:
-                self.module_list.append(self.conv_bn_relu(in_ch=in_ch + w // 2, out_ch=w))
+                channels=in_ch+acc_channels
+                acc_channels=channels//2
+            self.module_list.append(self.conv_bn_relu(in_ch=channels, out_ch=channels))
         self.initialize_weights()
 
     def conv_bn_relu(self, in_ch, out_ch, kernel_size=3, stride=1, padding=1):
@@ -65,10 +68,11 @@ class HSBlock(nn.Module):
 #     os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 #     device = torch.device("cpu")
 #     # [batch,channel,H,W]
-#     feature = torch.rand(6, 63, 24, 22).to(device)
+#     feature = torch.rand(6, 40, 24, 24).to(device)
 #     in_ch = feature.shape[1]
 #
-#     hs_block = HSBlock(in_ch).to(device)
+#     # 表2中s=5  论文推荐s=8
+#     hs_block = HSBlock(in_ch,s=5).to(device)
 #     hs_block = hs_block.train()
 #     result = hs_block(feature)
 #     print(result.size())
