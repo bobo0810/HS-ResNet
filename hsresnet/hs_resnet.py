@@ -2,6 +2,7 @@ from torch import Tensor
 import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 from hs_block import HSBlock
+import torch
 
 __all__ = ['ResNet',  'hs_resnet50', 'hs_resnet101', 'hs_resnet152', 'hs_resnext50_32x4d', 'hs_resnext101_32x8d',
            'hs_wide_resnet50_2', 'hs_wide_resnet101_2']
@@ -348,7 +349,6 @@ def hs_wide_resnet101_2(**kwargs: Any) -> ResNet:
 
 if __name__ == '__main__':
     import os
-    import torch
     os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
     # [batch,channel,H,W]
