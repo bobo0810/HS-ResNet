@@ -144,6 +144,7 @@ class ResNet(nn.Module):
         self,
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
+        small_input: bool = False,
         num_classes: int = 1000,
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -167,8 +168,14 @@ class ResNet(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
-                               bias=False)
+
+        if small_input:
+            self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1,
+                                   bias=False)
+        else:
+            self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
+                                   bias=False)
+
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -249,13 +256,14 @@ class ResNet(nn.Module):
 def _resnet(
     block: Type[Union[BasicBlock, Bottleneck]],
     layers: List[int],
+    small_input,
     **kwargs: Any
 ) -> ResNet:
-    model = ResNet(block, layers, **kwargs)
+    model = ResNet(block, layers,small_input, **kwargs)
     return model
 
 
-def hs_resnet50(**kwargs: Any) -> ResNet:
+def hs_resnet50(small_input=False,**kwargs: Any) -> ResNet:
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -263,10 +271,10 @@ def hs_resnet50(**kwargs: Any) -> ResNet:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet(Bottleneck, [3, 4, 6, 3],**kwargs)
+    return _resnet(Bottleneck, [3, 4, 6, 3],small_input,**kwargs)
 
 
-def hs_resnet101(**kwargs: Any) -> ResNet:
+def hs_resnet101(small_input=False,**kwargs: Any) -> ResNet:
     r"""ResNet-101 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -274,10 +282,10 @@ def hs_resnet101(**kwargs: Any) -> ResNet:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet(Bottleneck, [3, 4, 23, 3],**kwargs)
+    return _resnet(Bottleneck, [3, 4, 23, 3],small_input,**kwargs)
 
 
-def hs_resnet152(**kwargs: Any) -> ResNet:
+def hs_resnet152(small_input=False,**kwargs: Any) -> ResNet:
     r"""ResNet-152 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -285,10 +293,10 @@ def hs_resnet152(**kwargs: Any) -> ResNet:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet( Bottleneck, [3, 8, 36, 3], **kwargs)
+    return _resnet( Bottleneck, [3, 8, 36, 3],small_input, **kwargs)
 
 
-def hs_resnext50_32x4d( **kwargs: Any) -> ResNet:
+def hs_resnext50_32x4d(small_input=False, **kwargs: Any) -> ResNet:
     r"""ResNeXt-50 32x4d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_
 
@@ -298,10 +306,10 @@ def hs_resnext50_32x4d( **kwargs: Any) -> ResNet:
     """
     kwargs['groups'] = 32
     kwargs['width_per_group'] = 4
-    return _resnet(Bottleneck, [3, 4, 6, 3], **kwargs)
+    return _resnet(Bottleneck, [3, 4, 6, 3], small_input,**kwargs)
 
 
-def hs_resnext101_32x8d( **kwargs: Any) -> ResNet:
+def hs_resnext101_32x8d( small_input=False,**kwargs: Any) -> ResNet:
     r"""ResNeXt-101 32x8d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_
 
@@ -311,10 +319,10 @@ def hs_resnext101_32x8d( **kwargs: Any) -> ResNet:
     """
     kwargs['groups'] = 32
     kwargs['width_per_group'] = 8
-    return _resnet( Bottleneck, [3, 4, 23, 3],**kwargs)
+    return _resnet( Bottleneck, [3, 4, 23, 3],small_input,**kwargs)
 
 
-def hs_wide_resnet50_2(**kwargs: Any) -> ResNet:
+def hs_wide_resnet50_2(small_input=False,**kwargs: Any) -> ResNet:
     r"""Wide ResNet-50-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_
 
@@ -328,10 +336,10 @@ def hs_wide_resnet50_2(**kwargs: Any) -> ResNet:
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     kwargs['width_per_group'] = 64 * 2
-    return _resnet( Bottleneck, [3, 4, 6, 3], **kwargs)
+    return _resnet( Bottleneck, [3, 4, 6, 3], small_input,**kwargs)
 
 
-def hs_wide_resnet101_2(**kwargs: Any) -> ResNet:
+def hs_wide_resnet101_2(small_input=False,**kwargs: Any) -> ResNet:
     r"""Wide ResNet-101-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_
 
@@ -345,14 +353,14 @@ def hs_wide_resnet101_2(**kwargs: Any) -> ResNet:
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     kwargs['width_per_group'] = 64 * 2
-    return _resnet( Bottleneck, [3, 4, 23, 3], **kwargs)
+    return _resnet( Bottleneck, [3, 4, 23, 3],small_input, **kwargs)
 
 if __name__ == '__main__':
     import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+    os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 
     # [batch,channel,H,W]
     img = torch.rand(2, 3, 112, 112).cuda()
-    model = hs_wide_resnet101_2().cuda().train()
+    model = hs_resnet50(small_input=False).cuda().train()
     result = model(img)
     print(result.shape)
