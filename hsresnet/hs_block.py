@@ -13,19 +13,20 @@ class HSBlock(nn.Module):
         super(HSBlock, self).__init__()
         self.s = s
         self.module_list = nn.ModuleList()
-        # 避免无法整除通道数
-        in_ch, in_ch_last = (in_ch // s, in_ch // s) if in_ch % s == 0 else (in_ch // s + 1, in_ch % s)
+
+        in_ch_range=torch.Tensor(in_ch)
+        in_ch_list = list(in_ch_range.chunk(chunks=self.s, dim=0))
+
         self.module_list.append(nn.Sequential())
-        acc_channels = 0
-        for i in range(1,self.s):
+        channel_nums = []
+        for i in range(1,len(in_ch_list)):
             if i == 1:
-                channels=in_ch
-                acc_channels=channels//2
-            elif i == s - 1:
-                channels = in_ch_last + acc_channels
+                channels = len(in_ch_list[i])
             else:
-                channels=in_ch+acc_channels
-                acc_channels=channels//2
+                random_tensor = torch.Tensor(channel_nums[i-2])
+                _, pre_ch = random_tensor.chunk(chunks=2, dim=0)
+                channels= len(pre_ch)+len(in_ch_list[i])
+            channel_nums.append(channels)
             self.module_list.append(self.conv_bn_relu(in_ch=channels, out_ch=channels))
         self.initialize_weights()
 
